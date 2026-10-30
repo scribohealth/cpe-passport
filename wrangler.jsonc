@@ -3,15 +3,17 @@
   "name": "cpe-passport",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-07-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": "dist/client"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "cpe-passport-demo",
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_name": "cpe-passport-production",
+      "database_id": "dea0b862-4e75-494e-84ef-8c2b200a0683",
       "migrations_dir": "migrations"
     }
   ],
@@ -22,16 +24,26 @@
     }
   ],
   "triggers": {
-    "crons": ["0 1 * * *"]
+    "crons": [
+      "0 1 * * *"
+    ]
   },
   "vars": {
-    "APP_URL": "http://localhost:5173",
+    "APP_URL": "https://cpe.scribo.com.hk",
     "EMAIL_MODE": "outbox",
-    "TEST_EMAIL_ALLOWLIST": "",
+    "TEST_EMAIL_ALLOWLIST": "will.kwan@scribo.com.hk,anthony.fan@scribo.com.hk",
     "MAX_UPLOAD_BYTES": "10485760",
     "REMINDER_LEAD_DAYS": "30,7"
   },
   "observability": {
     "enabled": false
-  }
+  },
+  "routes": [
+    {
+      "pattern": "cpe.scribo.com.hk",
+      "custom_domain": true
+    }
+  ],
+  "workers_dev": false,
+  "preview_urls": false
 }

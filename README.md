@@ -28,7 +28,7 @@ npm run dev
 
 Open `http://localhost:5173`. Register a synthetic account; verification is required for signing/submission, but partial passports and drafts can be saved first. Passwords must contain at least 12 characters.
 
-`APP_URL` must match the browser origin, including the port. A different dev port requires updating the local configuration. Never commit `.dev.vars` or credentials.
+`APP_URL` must match the browser origin, including the port. The local `.dev.vars.example` overrides the deployed origin with `http://localhost:5173`. A different dev port requires updating the local configuration. Never commit `.dev.vars` or credentials.
 
 In an executor where the home directory is read-only, prefix Wrangler/Vite commands with `XDG_CONFIG_HOME="$PWD/work/config"`. `CLOUDFLARE_CF_FETCH_ENABLED=false` avoids the optional development request for Cloudflare request metadata.
 
@@ -104,6 +104,8 @@ Vitest exercises real local D1 and R2 through Miniflare, with synthetic accounts
 
 `src/shared/config.ts` contains explicit versioned June–May cycles, the CUHK question set and the clearly labelled sample collection statement. Dates beyond the configured window require explicit new cycle records; no dates or professional rules are inferred. Reminder timing and file size are configurable Worker variables. The UI is English.
 
-Before any deployment, provision a private D1 database, ensure the configured R2 bucket `cpe-passport-production` exists and remains private, replace the placeholder database ID in `wrangler.json`, apply migrations with `--remote`, set the exact HTTPS `APP_URL` and a Worker `BETTER_AUTH_SECRET`, configure any optional OAuth/email service, and place the demo behind an appropriate private access gate. `npm run deploy` is provided but has not been run. No resources are provisioned automatically and no live deployment is implied by this repository.
+`wrangler.jsonc` configures D1 `cpe-passport-production` (`dea0b862-4e75-494e-84ef-8c2b200a0683`), private R2 `cpe-passport-production`, and `APP_URL=https://cpe.scribo.com.hk`. Its Custom Domain route asks Cloudflare to configure `cpe.scribo.com.hk` on deployment, including DNS and the TLS certificate; the domain must be in the deploying Cloudflare account. Default `workers.dev` and preview URLs are disabled.
+
+Before any deployment, confirm the configured D1/R2 resources exist and the bucket remains private, apply migrations with `--remote`, set a Worker `BETTER_AUTH_SECRET`, configure any optional OAuth/email service, and place the demo behind an appropriate private access gate. `npm run deploy` is provided but has not been run. No resources are provisioned automatically and no live deployment is implied by this repository.
 
 To reset **only a disposable local synthetic-data environment**, stop the dev server, remove `.wrangler/state/v3/d1` and `.wrangler/state/v3/r2`, then re-run migration/seed and create new accounts. This deletes local accounts, documents and reminders; it is not a production retention workflow.

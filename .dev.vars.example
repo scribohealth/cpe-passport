@@ -1,3 +1,4 @@
+APP_URL=http://localhost:5173
 BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters
 # Optional Google OAuth web client; callback /api/auth/callback/google
 # GOOGLE_CLIENT_ID=
