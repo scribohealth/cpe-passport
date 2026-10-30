@@ -109,3 +109,25 @@ Vitest exercises real local D1 and R2 through Miniflare, with synthetic accounts
 Before any deployment, confirm the configured D1/R2 resources exist and the bucket remains private, apply migrations with `--remote`, set a Worker `BETTER_AUTH_SECRET`, configure any optional OAuth/email service, and place the demo behind an appropriate private access gate. `npm run deploy` is provided but has not been run. No resources are provisioned automatically and no live deployment is implied by this repository.
 
 To reset **only a disposable local synthetic-data environment**, stop the dev server, remove `.wrangler/state/v3/d1` and `.wrangler/state/v3/r2`, then re-run migration/seed and create new accounts. This deletes local accounts, documents and reminders; it is not a production retention workflow.
+
+
+## Preview deployment
+
+The named Cloudflare environment `preview` deploys a separate Worker, `cpe-passport-staging`, at `https://staging-cpe.scribo.com.hk`. It uses D1 `cpe-passport-staging` (`05911c7f-9048-432d-b28d-981bef198331`) and private R2 `cpe-passport-staging`. Email mode, controlled recipient allowlist, upload limit, reminder schedule and cron match production. The Custom Domain is configured on deployment; default workers.dev/version preview URLs remain disabled.
+
+Cloudflare Vite selects the environment **before building**. Use these commands from the repository root:
+
+```bash
+# Preview (staging resources)
+npm run db:migrate:preview
+npx wrangler secret put BETTER_AUTH_SECRET --env preview --config wrangler.jsonc
+npm run deploy:preview
+
+# Production (production resources)
+npm run db:migrate:production
+npm run deploy
+```
+
+`npm run build:preview` only builds; `npm run build` explicitly builds production. The deploy scripts rebuild their selected environment. Changing only the Wrangler deploy flag after building does not switch the generated artifact. Remote migrations explicitly select the source config to avoid using whichever generated config was built last.
+
+Secrets are separate for each Worker: configure a separate preview `BETTER_AUTH_SECRET` and any optional Google OAuth credentials. The preview Google callback is `https://staging-cpe.scribo.com.hk/api/auth/callback/google`. Cloudflare Access protection must also cover the staging hostname. Deployment scripts do not apply database migrations automatically.

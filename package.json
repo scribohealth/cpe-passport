@@ -28,7 +28,7 @@
   "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "npm run build:production",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm test && npm run build",
@@ -37,7 +37,12 @@
     "cf-typegen": "wrangler types",
     "deploy": "npm run build && wrangler deploy",
     "reminders:simulate": "node scripts/simulate-reminders.mjs",
-    "samples": "node scripts/create-sample-documents.mjs"
+    "samples": "node scripts/create-sample-documents.mjs",
+    "build:production": "CLOUDFLARE_ENV= vite build",
+    "build:preview": "CLOUDFLARE_ENV=preview vite build",
+    "deploy:preview": "npm run build:preview && wrangler deploy --config dist/server/wrangler.json",
+    "db:migrate:production": "CLOUDFLARE_ENV= wrangler d1 migrations apply DB --remote --config wrangler.jsonc",
+    "db:migrate:preview": "wrangler d1 migrations apply DB --remote --env preview --config wrangler.jsonc"
   },
   "type": "module"
 }
