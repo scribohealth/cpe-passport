@@ -18,7 +18,7 @@
   "r2_buckets": [
     {
       "binding": "DOCUMENTS",
-      "bucket_name": "cpe-passport-private-demo"
+      "bucket_name": "cpe-passport-production"
     }
   ],
   "triggers": {

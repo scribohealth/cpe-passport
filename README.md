@@ -6,7 +6,7 @@ Private, non-production Phase 1 implementation for Hong Kong pharmacists. Use sy
 
 - TanStack Start / React, deployed as a Cloudflare Worker.
 - D1 for authentication, versioned passport records, immutable enrolment snapshots, notifications and audit metadata.
-- Private R2 for certificates. Every preview/download requires an owner session.
+- Private R2 for certificates, with the `DOCUMENTS` binding targeting `cpe-passport-production`. Every preview/download requires an owner session.
 - Better Auth with a Drizzle D1 adapter for email/password, verification, single-use password reset and optional Google OAuth. Automatic account linking is disabled.
 - An email outbox with an optional Cloudflare Email Routing `send_email` adapter. Final email service selection remains open; real provider delivery has not been configured or validated here.
 
@@ -104,6 +104,6 @@ Vitest exercises real local D1 and R2 through Miniflare, with synthetic accounts
 
 `src/shared/config.ts` contains explicit versioned June–May cycles, the CUHK question set and the clearly labelled sample collection statement. Dates beyond the configured window require explicit new cycle records; no dates or professional rules are inferred. Reminder timing and file size are configurable Worker variables. The UI is English.
 
-Before any deployment, provision a private D1 database and private R2 bucket, replace the placeholder database ID/bucket name in `wrangler.json`, apply migrations with `--remote`, set the exact HTTPS `APP_URL` and a Worker `BETTER_AUTH_SECRET`, configure any optional OAuth/email service, and place the demo behind an appropriate private access gate. `npm run deploy` is provided but has not been run. No resources are provisioned automatically and no live deployment is implied by this repository.
+Before any deployment, provision a private D1 database, ensure the configured R2 bucket `cpe-passport-production` exists and remains private, replace the placeholder database ID in `wrangler.json`, apply migrations with `--remote`, set the exact HTTPS `APP_URL` and a Worker `BETTER_AUTH_SECRET`, configure any optional OAuth/email service, and place the demo behind an appropriate private access gate. `npm run deploy` is provided but has not been run. No resources are provisioned automatically and no live deployment is implied by this repository.
 
 To reset **only a disposable local synthetic-data environment**, stop the dev server, remove `.wrangler/state/v3/d1` and `.wrangler/state/v3/r2`, then re-run migration/seed and create new accounts. This deletes local accounts, documents and reminders; it is not a production retention workflow.
