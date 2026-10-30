@@ -84,5 +84,28 @@
         ]
       }
     }
+  },
+  "previews": {
+    "vars": {
+      "APP_URL": "https://staging-cpe.scribo.com.hk",
+      "EMAIL_MODE": "outbox",
+      "TEST_EMAIL_ALLOWLIST": "will.kwan@scribo.com.hk,anthony.fan@scribo.com.hk",
+      "MAX_UPLOAD_BYTES": "10485760",
+      "REMINDER_LEAD_DAYS": "30,7"
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "cpe-passport-staging",
+        "database_id": "05911c7f-9048-432d-b28d-981bef198331",
+        "migrations_dir": "migrations"
+      }
+    ],
+    "r2_buckets": [
+      {
+        "binding": "DOCUMENTS",
+        "bucket_name": "cpe-passport-staging"
+      }
+    ]
   }
 }

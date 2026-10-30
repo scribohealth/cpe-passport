@@ -131,3 +131,12 @@ npm run deploy
 `npm run build:preview` only builds; `npm run build` explicitly builds production. The deploy scripts rebuild their selected environment. Changing only the Wrangler deploy flag after building does not switch the generated artifact. Remote migrations explicitly select the source config to avoid using whichever generated config was built last.
 
 Secrets are separate for each Worker: configure a separate preview `BETTER_AUTH_SECRET` and any optional Google OAuth credentials. The preview Google callback is `https://staging-cpe.scribo.com.hk/api/auth/callback/google`. Cloudflare Access protection must also cover the staging hostname. Deployment scripts do not apply database migrations automatically.
+
+
+### Cloudflare managed Previews
+
+Cloudflare's `wrangler preview` feature reads the separate top-level `previews` block, not `env.preview`. Both are configured with the supplied staging variables, D1 and R2 resources. The managed block intentionally contains no routes or Cron Triggers: those settings do not target managed Previews.
+
+For a managed Preview, build with `npm run build` before the Cloudflare preview command. Configure `BETTER_AUTH_SECRET` separately in Previews Base (for example, `npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc`). The `--env preview` secrets in the instructions above belong to the standalone staging Worker, not Previews Base.
+
+The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment, deployed with `npm run deploy:preview`. Managed branch Previews have separate hostnames. If testing authentication on one of those hostnames, override that Preview's `APP_URL` to its exact HTTPS origin; the configured fixed staging origin cannot authenticate requests on a different hostname.
