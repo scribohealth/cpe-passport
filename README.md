@@ -135,11 +135,13 @@ Secrets are separate for each Worker: configure a separate preview `BETTER_AUTH_
 
 ### Cloudflare managed Previews
 
-Cloudflare's `wrangler preview` feature reads the separate top-level `previews` block, not `env.preview`. Both are configured with the supplied staging variables, D1 and R2 resources. The managed block intentionally contains no routes or Cron Triggers: those settings do not target managed Previews.
+Cloudflare's `wrangler preview` feature reads the separate top-level `previews` block, not `env.preview`. Both use the supplied staging D1 and R2 resources, email settings and limits. The managed `previews.vars.APP_URL` matches the current branch URL, `https://feat-phase-1-passport-cpe-passport.scribo.workers.dev`, while `env.preview.vars.APP_URL` remains `https://staging-cpe.scribo.com.hk`. The managed block intentionally contains no routes or Cron Triggers: those settings do not target managed Previews.
 
 For a managed Preview, build with `npm run build` before the Cloudflare preview command. Configure `BETTER_AUTH_SECRET` separately in Previews Base (for example, `npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc`). The `--env preview` secrets in the instructions above belong to the standalone staging Worker, not Previews Base.
 
-The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment, deployed with `npm run deploy:preview`. Managed branch Previews have separate hostnames. If testing authentication on one of those hostnames, override that Preview's `APP_URL` to its exact HTTPS origin; the configured fixed staging origin cannot authenticate requests on a different hostname.
+The managed Preview origin is specific to the current feature branch; override `APP_URL` to the exact HTTPS origin when creating another branch Preview.
+
+The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment, deployed with `npm run deploy:preview`. Managed branch Previews have separate hostnames. If testing authentication on one of those hostnames, override that Preview's `APP_URL` to its exact HTTPS origin; an origin configured for a different hostname will fail authentication checks.
 
 ## Diagnosing sign-in failures
 
