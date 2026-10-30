@@ -140,3 +140,17 @@ Cloudflare's `wrangler preview` feature reads the separate top-level `previews` 
 For a managed Preview, build with `npm run build` before the Cloudflare preview command. Configure `BETTER_AUTH_SECRET` separately in Previews Base (for example, `npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc`). The `--env preview` secrets in the instructions above belong to the standalone staging Worker, not Previews Base.
 
 The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment, deployed with `npm run deploy:preview`. Managed branch Previews have separate hostnames. If testing authentication on one of those hostnames, override that Preview's `APP_URL` to its exact HTTPS origin; the configured fixed staging origin cannot authenticate requests on a different hostname.
+
+## Diagnosing sign-in failures
+
+Workers observability and application error logs are enabled for production, the standalone staging Worker, and managed Previews. Automatic invocation URL logging is disabled because authentication URLs can contain single-use tokens. Unexpected API errors include an `X-Request-ID` header and a matching reference in the response. Search Workers Logs for that reference; safe structured events record a fixed error code, not passwords, cookies, tokens, email addresses, SQL values or raw exceptions.
+
+- `AUTH_SECRET_MISSING` / `AUTH_SECRET_TOO_SHORT`: configure `BETTER_AUTH_SECRET` with at least 32 random characters in the actual deployment's secret scope.
+- `DB_BINDING_MISSING`: check the selected deployment's `DB` binding.
+- `DB_MIGRATIONS_REQUIRED`: apply migrations to the database bound to that deployment.
+- `DB_SCHEMA_MISMATCH`: check the remote migration status and database schema; do not reset a database containing records.
+- `DB_OPERATION_FAILED` / `UNEXPECTED_SERVER_ERROR`: use the request reference to correlate the failure and investigate without dumping sensitive request data.
+
+For standalone staging, run `npm run db:migrate:preview` and configure its secret with `npx wrangler secret put BETTER_AUTH_SECRET --env preview --config wrangler.jsonc`. For production, use `npm run db:migrate:production` and `npx wrangler secret put BETTER_AUTH_SECRET --config wrangler.jsonc`. Managed Cloudflare Previews require the secret in Previews Base (`npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc`) or the individual Preview; a production or named-environment secret does not supply it. Set the individual Preview secret for an existing Preview, or create a new Preview after changing Base secrets.
+
+`APP_URL` must match the exact browser origin, especially for managed branch Preview URLs. Configuration changes to observability require redeployment before the new logs appear.

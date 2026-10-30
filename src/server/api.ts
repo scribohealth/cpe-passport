@@ -29,6 +29,7 @@ import {
   signingContext,
 } from "./repository";
 import { deliverMail } from "./mail";
+import { reportFailure } from "./diagnostics";
 
 type AuthUser = {
   id: string;
@@ -43,8 +44,14 @@ const fail = (
   throw new HTTPException(status, { message });
 };
 const versionSchema = z.number().int().nonnegative();
-const api = new Hono<{ Bindings: AppEnv; Variables: { user: AuthUser } }>();
+const api = new Hono<{
+  Bindings: AppEnv;
+  Variables: { user: AuthUser; requestId: string };
+}>();
 api.use("*", async (c, next) => {
+  const requestId = crypto.randomUUID();
+  c.set("requestId", requestId);
+  c.header("X-Request-ID", requestId);
   c.header("Cache-Control", "no-store, private");
   c.header("X-Content-Type-Options", "nosniff");
   c.header("Referrer-Policy", "no-referrer");
@@ -64,9 +71,13 @@ api.onError((err, c) => {
     );
   if (err instanceof SyntaxError)
     return c.json({ error: "Invalid request data." }, 400);
-  // Do not log request bodies, auth links, personal data, signatures, or SQL bindings.
+  const requestId = c.get("requestId");
+  reportFailure(err, requestId);
   return c.json(
-    { error: "The request could not be completed. Please try again." },
+    {
+      error: `The request could not be completed. Please try again. Reference: ${requestId}`,
+      requestId,
+    },
     500,
   );
 });
@@ -80,7 +91,20 @@ api.get("/api/config", (c) =>
   }),
 );
 api.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const response = await createAuth(c.env).handler(c.req.raw);
+  const response = await createAuth(c.env, c.get("requestId")).handler(
+    c.req.raw,
+  );
+  if (response.status >= 500) {
+    const requestId = c.get("requestId");
+    reportFailure(new Error("Authentication request failed"), requestId);
+    return c.json(
+      {
+        error: `Sign-in could not be completed. Reference: ${requestId}`,
+        requestId,
+      },
+      500,
+    );
+  }
   c.executionCtx.waitUntil(deliverMail(c.env));
   return response;
 });
@@ -90,7 +114,7 @@ api.use("/api/*", async (c, next) => {
     c.req.header("Origin") !== new URL(c.env.APP_URL).origin
   )
     fail(403, "A same-origin request is required.");
-  const session = await createAuth(c.env).api.getSession({
+  const session = await createAuth(c.env, c.get("requestId")).api.getSession({
     headers: c.req.raw.headers,
   });
   if (!session) fail(401, "Please sign in to your passport.");

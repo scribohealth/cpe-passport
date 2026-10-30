@@ -4,10 +4,20 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./auth-schema";
 import type { AppEnv } from "./env";
 import { enqueueMail } from "./mail";
+import { AuthConfigurationError, reportFailure } from "./diagnostics";
 
-export function createAuth(env: AppEnv) {
-  if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32)
-    throw new Error("Configure BETTER_AUTH_SECRET (32+ characters)");
+export function createAuth(env: AppEnv, requestId?: string) {
+  if (!env.BETTER_AUTH_SECRET)
+    throw new AuthConfigurationError("AUTH_SECRET_MISSING");
+  if (env.BETTER_AUTH_SECRET.length < 32)
+    throw new AuthConfigurationError("AUTH_SECRET_TOO_SHORT");
+  if (!env.DB || typeof env.DB.prepare !== "function")
+    throw new AuthConfigurationError("DB_BINDING_MISSING");
+  try {
+    new URL(env.APP_URL);
+  } catch {
+    throw new AuthConfigurationError("APP_URL_INVALID");
+  }
   return betterAuth({
     appName: "Scribo CPE Passport",
     baseURL: env.APP_URL,
@@ -80,6 +90,14 @@ export function createAuth(env: AppEnv) {
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       useSecureCookies: env.APP_URL.startsWith("https:"),
     },
-    logger: { disabled: true },
+    logger: {
+      level: "error",
+      log: (_level, message, ...args) => {
+        reportFailure(
+          args.find((value) => value instanceof Error) ?? new Error(message),
+          requestId ?? crypto.randomUUID(),
+        );
+      },
+    },
   });
 }

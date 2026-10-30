@@ -15,7 +15,7 @@ Implemented on 30 October 2026 (Hong Kong). This is a private demonstration foun
 
 ## Automated acceptance evidence
 
-`npm test` passes all 21 tests using real local D1 and R2 bindings through Miniflare, synthetic accounts, and no external provider calls.
+`npm test` passes all 24 tests using real local D1 and R2 bindings through Miniflare, synthetic accounts, and no external provider calls.
 
 | Spec scenario | Evidence / remaining environment check                                                                                                                                                                                                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
