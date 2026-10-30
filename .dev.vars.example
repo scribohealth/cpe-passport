@@ -1,0 +1,8 @@
+BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters
+# Optional Google OAuth web client; callback /api/auth/callback/google
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# Live demo email requires EMAIL_MODE=cloudflare, a SEND_EMAIL binding,
+# EMAIL_FROM on your routing domain, and exact controlled recipients below.
+# EMAIL_FROM=
+# TEST_EMAIL_ALLOWLIST=tester@example.com
