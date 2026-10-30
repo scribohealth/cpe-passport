@@ -183,6 +183,56 @@ afterAll(async () => {
   await mf?.dispose();
 });
 
+describe("managed Preview authentication integration", () => {
+  test("rejects cross-branch state changes before accessing authentication", async () => {
+    const response = await api.fetch(
+      new Request(
+        "https://branch-a-cpe-passport.scribo.workers.dev/api/profile",
+        {
+          method: "PUT",
+          headers: {
+            Origin: "https://branch-b-cpe-passport.scribo.workers.dev",
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+        },
+      ),
+      { ...env, PREVIEW_WORKER_HOST: "cpe-passport.scribo.workers.dev" },
+      ctx,
+    );
+    expect(response.status).toBe(403);
+  });
+  test("creates authentication links using the actual branch origin", async () => {
+    const branchOrigin = "https://new-feature-cpe-passport.scribo.workers.dev";
+    const response = await api.fetch(
+      new Request(`${branchOrigin}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: {
+          Origin: branchOrigin,
+          "Content-Type": "application/json",
+          "cf-connecting-ip": "192.0.2.99",
+        },
+        body: JSON.stringify({
+          email: "branch-test@example.test",
+          password: "Synthetic-branch-password-2026!",
+          name: "Synthetic Branch Pharmacist",
+          callbackURL: branchOrigin,
+        }),
+      }),
+      { ...env, PREVIEW_WORKER_HOST: "cpe-passport.scribo.workers.dev" },
+      ctx,
+    );
+    expect(response.status).toBe(200);
+    const email = await env.DB.prepare(
+      "SELECT body FROM email_outbox WHERE recipient=?",
+    )
+      .bind("branch-test@example.test")
+      .first<{ body: string }>();
+    const link = email!.body.match(/https:\/\/[^\s]+/)![0];
+    expect(new URL(link).origin).toBe(branchOrigin);
+  });
+});
+
 describe("configuration and server validation", () => {
   test("Hong Kong June–May boundary is separate from licence year", () => {
     expect(hkDate(new Date("2027-05-31T16:00:00Z"))).toBe("2027-06-01");
@@ -247,8 +297,8 @@ describe("authentication and ownership", () => {
   });
   test("verification email outbox is private and real sending is disabled", async () => {
     const count = await env.DB.prepare(
-      "SELECT COUNT(*) AS n FROM email_outbox",
-    ).first<{ n: number }>();
+      "SELECT COUNT(*) AS n FROM email_outbox WHERE owner_id IN (?,?)",
+    ).bind(alice.id, bob.id).first<{ n: number }>();
     expect(count!.n).toBe(2);
     expect((await call("/api/outbox")).status).toBe(404);
     await deliverMail(env);

@@ -30,6 +30,7 @@ import {
 } from "./repository";
 import { deliverMail } from "./mail";
 import { reportFailure } from "./diagnostics";
+import { requestEnvironment } from "./request-env";
 
 type AuthUser = {
   id: string;
@@ -55,6 +56,7 @@ api.use("*", async (c, next) => {
   c.header("Cache-Control", "no-store, private");
   c.header("X-Content-Type-Options", "nosniff");
   c.header("Referrer-Policy", "no-referrer");
+  c.env = requestEnvironment(c.env, c.req.raw);
   await next();
 });
 api.onError((err, c) => {

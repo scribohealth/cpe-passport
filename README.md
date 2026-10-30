@@ -135,13 +135,19 @@ Secrets are separate for each Worker: configure a separate preview `BETTER_AUTH_
 
 ### Cloudflare managed Previews
 
-Cloudflare's `wrangler preview` feature reads the separate top-level `previews` block, not `env.preview`. Both use the supplied staging D1 and R2 resources, email settings and limits. The managed `previews.vars.APP_URL` matches the current branch URL, `https://feat-phase-1-passport-cpe-passport.scribo.workers.dev`, while `env.preview.vars.APP_URL` remains `https://staging-cpe.scribo.com.hk`. The managed block intentionally contains no routes or Cron Triggers: those settings do not target managed Previews.
+Cloudflare's `wrangler preview` feature reads the top-level `previews` block, independently of `env.preview`. Both use the staging D1 and R2 resources, email settings and limits. Only managed Previews set `PREVIEW_WORKER_HOST=cpe-passport.scribo.workers.dev`. On each API request, the server derives the authentication base URL, same-origin check and email links from the actual HTTPS request origin, restricted to `<preview>-cpe-passport.scribo.workers.dev`. It rejects other workers/accounts, subdomain lookalikes, HTTP, nonstandard ports and forwarded-host overrides. No per-branch `APP_URL` edit or arbitrary-origin wildcard is needed. Production and standalone staging keep their exact configured `APP_URL` values.
 
-For a managed Preview, build with `npm run build` before the Cloudflare preview command. Configure `BETTER_AUTH_SECRET` separately in Previews Base (for example, `npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc`). The `--env preview` secrets in the instructions above belong to the standalone staging Worker, not Previews Base.
+Set the shared authentication secret once in **Previews Base**:
 
-The managed Preview origin is specific to the current feature branch; override `APP_URL` to the exact HTTPS origin when creating another branch Preview.
+```bash
+npx wrangler preview base-config secret put BETTER_AUTH_SECRET --config wrangler.jsonc
+```
 
-The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment, deployed with `npm run deploy:preview`. Managed branch Previews have separate hostnames. If testing authentication on one of those hostnames, override that Preview's `APP_URL` to its exact HTTPS origin; an origin configured for a different hostname will fail authentication checks.
+Enter a random preview-only secret of at least 32 characters at the prompt. New branch Previews inherit it; existing Previews do not retroactively receive Base secret changes. Update an existing Preview with `wrangler preview secret put BETTER_AUTH_SECRET --name <preview-name> --config wrangler.jsonc`, or recreate it. Configure production and the standalone staging Worker's secrets separately. Secrets never belong in the committed config. This repository change does not set remote secret values.
+
+Build managed Previews with `npm run build` before the Cloudflare preview command. The stable `staging-cpe.scribo.com.hk` Custom Domain and scheduled reminders belong to the standalone staging environment (`npm run deploy:preview`); managed Previews use their branch hostnames and have no cron. Managed Previews still share the configured staging database/bucket.
+
+Google OAuth redirect URIs must be registered separately with Google. Dynamic application origin handling does not make Google accept arbitrary branch callbacks; use explicitly registered branch URIs or the fixed staging hostname for Google sign-in.
 
 ## Diagnosing sign-in failures
 

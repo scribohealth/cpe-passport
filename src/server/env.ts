@@ -3,6 +3,7 @@ export interface AppEnv {
   DOCUMENTS: R2Bucket;
   BETTER_AUTH_SECRET: string;
   APP_URL: string;
+  PREVIEW_WORKER_HOST?: string;
   EMAIL_MODE: string;
   TEST_EMAIL_ALLOWLIST: string;
   EMAIL_FROM?: string;

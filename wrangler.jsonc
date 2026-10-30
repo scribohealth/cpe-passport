@@ -94,7 +94,8 @@
   },
   "previews": {
     "vars": {
-      "APP_URL": "https://feat-phase-1-passport-cpe-passport.scribo.workers.dev",
+      "APP_URL": "https://staging-cpe.scribo.com.hk",
+      "PREVIEW_WORKER_HOST": "cpe-passport.scribo.workers.dev",
       "EMAIL_MODE": "outbox",
       "TEST_EMAIL_ALLOWLIST": "will.kwan@scribo.com.hk,anthony.fan@scribo.com.hk",
       "MAX_UPLOAD_BYTES": "10485760",
